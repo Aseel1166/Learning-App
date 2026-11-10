@@ -1,10 +1,12 @@
+import SwiftData
 import SwiftUI
 
 @main struct MyApp: App {
     var body: some Scene {
         WindowGroup {
-            OnboardingView()
+            RootView()
                 .preferredColorScheme(.dark)
         }
+        .modelContainer(for: [LearningGoal.self, DayLog.self])
     }
 }
