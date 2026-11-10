@@ -7,7 +7,7 @@ struct OnboardingView: View {
     /// Called when the user taps Start Learning with a valid goal.
     var onStart: (String, GoalDuration) -> Void = { _, _ in }
 
-    private let accent = Color(red: 0.91, green: 0.57, blue: 0.25)
+    private let accent = Color.appAccent
 
     var body: some View {
         ZStack {
