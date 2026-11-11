@@ -8,9 +8,11 @@ struct RootView: View {
 
     var body: some View {
         if let goal = goals.last {
-            ActivityView(goal: goal, modelContext: modelContext)
-                // A new goal must get a fresh view model.
-                .id(goal.persistentModelID)
+            NavigationStack {
+                ActivityView(goal: goal, modelContext: modelContext)
+            }
+            // A new goal must get a fresh view model and close any open screen.
+            .id(goal.persistentModelID)
         } else {
             OnboardingView { subject, duration in
                 modelContext.insert(LearningGoal(subject: subject, duration: duration))

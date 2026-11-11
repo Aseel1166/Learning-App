@@ -21,6 +21,13 @@ final class ActivityViewModel {
         var id: Date { date }
     }
 
+    /// What the page shows instead of the log buttons once the goal is over.
+    struct GoalResult {
+        let systemImage: String
+        let title: String
+        let message: String
+    }
+
     let goal: LearningGoal
 
     private let modelContext: ModelContext
@@ -29,6 +36,9 @@ final class ActivityViewModel {
 
     /// Start of the current day. Refreshed at midnight so the buttons re-enable.
     private(set) var today: Date
+
+    /// The time the page last evaluated; the goal status is judged against it.
+    private(set) var currentTime: Date
 
     init(
         goal: LearningGoal,
@@ -41,6 +51,7 @@ final class ActivityViewModel {
         self.calendar = calendar
         self.now = now
         self.today = calendar.startOfDay(for: now())
+        self.currentTime = now()
     }
 
     // MARK: - Header
@@ -82,13 +93,8 @@ final class ActivityViewModel {
 
     // MARK: - Counters
 
-    var learnedCount: Int {
-        goal.logs.filter { $0.kind == .learned }.count
-    }
-
-    var freezedCount: Int {
-        goal.logs.filter { $0.kind == .freezed }.count
-    }
+    var learnedCount: Int { goal.learnedCount }
+    var freezedCount: Int { goal.freezedCount }
 
     var freezesAllowed: Int {
         goal.duration.allowedFreezes
@@ -106,6 +112,32 @@ final class ActivityViewModel {
         count == 1 ? "1 day" : "\(count) days"
     }
 
+    // MARK: - Goal status
+
+    var status: GoalStatus {
+        goal.status(at: currentTime)
+    }
+
+    /// Set once the goal is completed or failed.
+    var result: GoalResult? {
+        switch status {
+        case .active:
+            nil
+        case .completed:
+            GoalResult(
+                systemImage: "hands.clap.fill",
+                title: "Well done!",
+                message: "Ready for your next goal?"
+            )
+        case .failed:
+            GoalResult(
+                systemImage: "xmark.seal",
+                title: "You didn't reach your goal this time.",
+                message: "Want to set another goal?"
+            )
+        }
+    }
+
     // MARK: - Buttons
 
     private var todayLog: DayLog? { log(on: today) }
@@ -114,11 +146,11 @@ final class ActivityViewModel {
 
     /// Both buttons are disabled once the day is logged, whichever way it was logged.
     var canLogLearned: Bool {
-        todayLog == nil
+        status == .active && todayLog == nil
     }
 
     var canFreeze: Bool {
-        todayLog == nil && hasFreezesLeft
+        status == .active && todayLog == nil && hasFreezesLeft
     }
 
     var logButtonTitle: String {
@@ -141,15 +173,24 @@ final class ActivityViewModel {
         logToday(as: .freezed)
     }
 
-    /// Re-reads the current day; call when the app returns to the foreground or at midnight.
-    func refreshToday() {
-        today = calendar.startOfDay(for: now())
+    /// Starts a new goal; the root view then switches to it.
+    func startNewGoal(subject: String, duration: GoalDuration) {
+        modelContext.insert(LearningGoal(subject: subject, duration: duration, startDate: now()))
     }
 
-    /// Seconds until the next midnight, plus a small buffer so the day has really changed.
-    var secondsUntilNextDay: TimeInterval {
-        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) else { return 3600 }
-        return max(tomorrow.timeIntervalSince(now()), 0) + 1
+    /// Re-reads the clock; call when the app returns to the foreground, at midnight and at the streak deadline.
+    func refresh() {
+        currentTime = now()
+        today = calendar.startOfDay(for: currentTime)
+    }
+
+    /// Seconds until the day changes or the streak runs out, whichever comes first, plus a small buffer.
+    var secondsUntilNextCheck: TimeInterval {
+        var next = calendar.date(byAdding: .day, value: 1, to: today) ?? currentTime.addingTimeInterval(3600)
+        if status == .active {
+            next = min(next, goal.streakDeadline)
+        }
+        return max(next.timeIntervalSince(now()), 0) + 1
     }
 
     // MARK: - Private
@@ -159,7 +200,7 @@ final class ActivityViewModel {
     }
 
     private func logToday(as kind: DayKind) {
-        let newLog = DayLog(date: today, kind: kind)
+        let newLog = DayLog(date: today, kind: kind, loggedAt: now())
         modelContext.insert(newLog)
         newLog.goal = goal
     }
