@@ -13,10 +13,13 @@ final class DayLog {
     /// Start of the logged day.
     var date: Date
     var kind: DayKind
+    /// The exact moment the user logged it; the 32-hour streak rule counts from here.
+    var loggedAt: Date = Date.now
     var goal: LearningGoal?
 
-    init(date: Date, kind: DayKind) {
+    init(date: Date, kind: DayKind, loggedAt: Date = .now) {
         self.date = date
         self.kind = kind
+        self.loggedAt = loggedAt
     }
 }

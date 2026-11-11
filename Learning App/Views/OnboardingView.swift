@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    @State private var viewModel = OnboardingViewModel()
+    @State private var viewModel = GoalFormViewModel()
     @FocusState private var isSubjectFocused: Bool
 
     /// Called when the user taps Start Learning with a valid goal.
@@ -24,11 +24,8 @@ struct OnboardingView: View {
                 header
                     .padding(.top, 60)
 
-                subjectField
+                GoalFormFields(viewModel: viewModel, isSubjectFocused: $isSubjectFocused)
                     .padding(.top, 32)
-
-                durationPicker
-                    .padding(.top, 28)
 
                 Spacer()
 
@@ -51,57 +48,6 @@ struct OnboardingView: View {
         }
     }
 
-    private var subjectField: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("I want to learn")
-                .font(.body)
-                .foregroundStyle(.white)
-
-            TextField(
-                "",
-                text: $viewModel.subject,
-                prompt: Text("Swift").foregroundStyle(.gray.opacity(0.6))
-            )
-            .textFieldStyle(.plain)
-            .focused($isSubjectFocused)
-            .submitLabel(.done)
-            .foregroundStyle(.white)
-
-            Divider()
-                .overlay(Color.white.opacity(0.2))
-        }
-    }
-
-    private var durationPicker: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("I want to learn it in a")
-                .font(.body)
-                .foregroundStyle(.white)
-
-            HStack(spacing: 12) {
-                ForEach(GoalDuration.allCases) { duration in
-                    durationButton(duration)
-                }
-            }
-        }
-    }
-
-    private func durationButton(_ duration: GoalDuration) -> some View {
-        let isSelected = viewModel.duration == duration
-        return Button {
-            viewModel.select(duration)
-        } label: {
-            Text(duration.rawValue)
-                .font(.body)
-                .foregroundStyle(isSelected ? .white : .gray)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(isSelected ? accent : Color.white.opacity(0.1), in: .capsule)
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
     private var startButton: some View {
         VStack(spacing: 10) {
             Button {
@@ -115,8 +61,8 @@ struct OnboardingView: View {
                     .background(accent, in: .capsule)
             }
             .buttonStyle(.plain)
-            .disabled(!viewModel.canStart)
-            .opacity(viewModel.canStart ? 1 : 0.5)
+            .disabled(!viewModel.isValid)
+            .opacity(viewModel.isValid ? 1 : 0.5)
 
             Text("You can edit your desire later")
                 .font(.caption2)

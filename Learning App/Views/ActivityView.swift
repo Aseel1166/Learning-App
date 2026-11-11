@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ActivityView: View {
     @State private var viewModel: ActivityViewModel
+    @State private var isShowingNewGoal = false
     @Environment(\.scenePhase) private var scenePhase
 
     init(goal: LearningGoal, modelContext: ModelContext) {
@@ -22,25 +23,45 @@ struct ActivityView: View {
                 statCards
                     .padding(.top, 16)
 
-                Spacer()
+                if let result = viewModel.result {
+                    Spacer()
 
-                logButton
+                    GoalResultView(
+                        systemImage: result.systemImage,
+                        title: result.title,
+                        message: result.message
+                    ) {
+                        isShowingNewGoal = true
+                    }
 
-                Spacer()
+                    Spacer()
+                } else {
+                    Spacer()
 
-                freezeSection
+                    logButton
+
+                    Spacer()
+
+                    freezeSection
+                }
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }
-        .onChange(of: scenePhase) {
-            if scenePhase == .active { viewModel.refreshToday() }
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationDestination(isPresented: $isShowingNewGoal) {
+            NewGoalView { subject, duration in
+                viewModel.startNewGoal(subject: subject, duration: duration)
+            }
         }
-        // Wakes at midnight so the buttons become available for the new day.
+        .onChange(of: scenePhase) {
+            if scenePhase == .active { viewModel.refresh() }
+        }
+        // Wakes at midnight and when the streak runs out, so the page never shows a stale state.
         .task {
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(viewModel.secondsUntilNextDay))
-                viewModel.refreshToday()
+                try? await Task.sleep(for: .seconds(viewModel.secondsUntilNextCheck))
+                viewModel.refresh()
             }
         }
     }
@@ -151,12 +172,20 @@ struct ActivityView: View {
     ActivityPreview(today: nil, learned: 3, freezed: 2)
 }
 
+#Preview("Goal completed") {
+    ActivityPreview(today: nil, learned: 7, freezed: 2)
+}
+
+#Preview("Goal not met") {
+    ActivityPreview(today: nil, learned: 2, freezed: 2, hoursSinceLastLog: 40)
+}
+
 /// Hosts `ActivityView` with an in-memory store filled with sample days before today.
 private struct ActivityPreview: View {
     private let container: ModelContainer
     private let goal: LearningGoal
 
-    init(today: DayKind?, learned: Int, freezed: Int) {
+    init(today: DayKind?, learned: Int, freezed: Int, hoursSinceLastLog: Double = 1) {
         // In-memory store, only used for previews.
         let container = try! ModelContainer(
             for: LearningGoal.self, DayLog.self,
@@ -167,12 +196,13 @@ private struct ActivityPreview: View {
 
         let calendar = Calendar.current
         let startOfToday = calendar.startOfDay(for: .now)
+        let lastLoggedAt = Date.now.addingTimeInterval(-hoursSinceLastLog * 3600)
         let previousKinds = Array(repeating: DayKind.learned, count: learned)
             + Array(repeating: DayKind.freezed, count: freezed)
 
         for (index, kind) in previousKinds.enumerated() {
             if let date = calendar.date(byAdding: .day, value: -(index + 1), to: startOfToday) {
-                let log = DayLog(date: date, kind: kind)
+                let log = DayLog(date: date, kind: kind, loggedAt: lastLoggedAt)
                 container.mainContext.insert(log)
                 log.goal = goal
             }
@@ -189,8 +219,10 @@ private struct ActivityPreview: View {
     }
 
     var body: some View {
-        ActivityView(goal: goal, modelContext: container.mainContext)
-            .modelContainer(container)
-            .preferredColorScheme(.dark)
+        NavigationStack {
+            ActivityView(goal: goal, modelContext: container.mainContext)
+        }
+        .modelContainer(container)
+        .preferredColorScheme(.dark)
     }
 }
