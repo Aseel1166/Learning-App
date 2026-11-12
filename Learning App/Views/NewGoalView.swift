@@ -26,7 +26,9 @@ struct NewGoalView: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save goal", systemImage: "checkmark") {
-                    onSave(viewModel.trimmedSubject, viewModel.duration)
+                    if let goal = viewModel.selection {
+                        onSave(goal.subject, goal.duration)
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.appAccent)

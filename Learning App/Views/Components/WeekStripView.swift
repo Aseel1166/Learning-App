@@ -12,34 +12,12 @@ struct WeekStripView: View {
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.white)
 
-                    Text("\(day.number)")
-                        .font(.title3)
-                        .fontWeight(day.isToday && day.state == .none ? .bold : .regular)
-                        .foregroundStyle(foreground(for: day))
-                        .frame(width: 40, height: 40)
-                        .background(background(for: day), in: .circle)
+                    DayCircleView(number: day.number, state: day.state, isToday: day.isToday)
                 }
                 .frame(maxWidth: .infinity)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(accessibilityLabel(for: day))
             }
-        }
-    }
-
-    private func foreground(for day: ActivityViewModel.WeekDay) -> Color {
-        switch day.state {
-        case .learned: .appAccent
-        case .freezed: .freezeBlue
-        case .none: .white
-        }
-    }
-
-    private func background(for day: ActivityViewModel.WeekDay) -> Color {
-        switch day.state {
-        case .learned: Color.appAccent.opacity(0.2)
-        case .freezed: Color.freezeBlue.opacity(0.2)
-        // Today stays highlighted until it is logged.
-        case .none: day.isToday ? .appAccent : .clear
         }
     }
 

@@ -55,11 +55,9 @@ struct GoalFormFields: View {
             Text(duration.rawValue)
                 .font(.body)
                 .foregroundStyle(isSelected ? .white : .gray)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(isSelected ? Color.appAccent : Color.white.opacity(0.1), in: .capsule)
+                .padding(.horizontal, 8)
         }
-        .buttonStyle(.plain)
+        .glassActionButton(isLit: isSelected, tint: .appAccent)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

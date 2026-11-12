@@ -7,6 +7,21 @@ enum DayKind: String, Codable {
     case freezed
 }
 
+/// How a day is shown: nothing logged, learned, or freezed.
+enum DayState {
+    case none
+    case learned
+    case freezed
+
+    init(kind: DayKind?) {
+        switch kind {
+        case .learned: self = .learned
+        case .freezed: self = .freezed
+        case nil: self = .none
+        }
+    }
+}
+
 /// One logged day inside a learning goal.
 @Model
 final class DayLog {
