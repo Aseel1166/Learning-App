@@ -51,18 +51,17 @@ struct OnboardingView: View {
     private var startButton: some View {
         VStack(spacing: 10) {
             Button {
-                onStart(viewModel.trimmedSubject, viewModel.duration)
+                if let goal = viewModel.selection {
+                    onStart(goal.subject, goal.duration)
+                }
             } label: {
                 Text("Start Learning")
                     .font(.body)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 12)
-                    .background(accent, in: .capsule)
+                    .foregroundStyle(viewModel.isValid ? .white : .gray)
+                    .padding(.horizontal, 12)
             }
-            .buttonStyle(.plain)
+            .glassActionButton(isLit: viewModel.isValid, tint: accent)
             .disabled(!viewModel.isValid)
-            .opacity(viewModel.isValid ? 1 : 0.5)
 
             Text("You can edit your desire later")
                 .font(.caption2)

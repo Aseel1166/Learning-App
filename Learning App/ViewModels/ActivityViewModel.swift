@@ -5,12 +5,6 @@ import SwiftData
 @MainActor
 @Observable
 final class ActivityViewModel {
-    enum DayState {
-        case none
-        case learned
-        case freezed
-    }
-
     struct WeekDay: Identifiable {
         let date: Date
         let symbol: String
@@ -84,11 +78,7 @@ final class ActivityViewModel {
     }
 
     private func state(on date: Date) -> DayState {
-        switch log(on: date)?.kind {
-        case .learned: .learned
-        case .freezed: .freezed
-        case nil: .none
-        }
+        DayState(kind: log(on: date)?.kind)
     }
 
     // MARK: - Counters
