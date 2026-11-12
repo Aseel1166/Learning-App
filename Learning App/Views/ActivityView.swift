@@ -4,6 +4,7 @@ import SwiftUI
 struct ActivityView: View {
     @State private var viewModel: ActivityViewModel
     @State private var isShowingNewGoal = false
+    @State private var isShowingUpdateGoal = false
     @Environment(\.scenePhase) private var scenePhase
 
     init(goal: LearningGoal, modelContext: ModelContext) {
@@ -54,6 +55,11 @@ struct ActivityView: View {
                 viewModel.startNewGoal(subject: subject, duration: duration)
             }
         }
+        .navigationDestination(isPresented: $isShowingUpdateGoal) {
+            UpdateGoalView(goal: viewModel.goal) { subject, duration in
+                viewModel.startNewGoal(subject: subject, duration: duration)
+            }
+        }
         .onChange(of: scenePhase) {
             if scenePhase == .active { viewModel.refresh() }
         }
@@ -82,15 +88,17 @@ struct ActivityView: View {
             Spacer()
 
             HStack(spacing: 12) {
-                // The calendar and learning goal screens are added in later branches.
-                headerButton(systemImage: "calendar", label: "Calendar")
-                headerButton(systemImage: "target", label: "Learning goal")
+                // The calendar screen is added in a later branch.
+                headerButton(systemImage: "calendar", label: "Calendar") {}
+                headerButton(systemImage: "target", label: "Learning goal") {
+                    isShowingUpdateGoal = true
+                }
             }
         }
     }
 
-    private func headerButton(systemImage: String, label: String) -> some View {
-        Button {} label: {
+    private func headerButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             Image(systemName: systemImage)
                 .font(.body)
                 .foregroundStyle(.white)
