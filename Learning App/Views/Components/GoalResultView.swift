@@ -26,14 +26,13 @@ struct GoalResultView: View {
                 .multilineTextAlignment(.center)
 
             Button(action: onSetGoal) {
-                Label("Set a goal", systemImage: "target")
+                Label("Set a goal", systemImage: "pencil.and.outline")
                     .font(.subheadline)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(Color.appAccent, in: .capsule)
+                    .padding(.horizontal, 8)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glassProminent)
+            .tint(.appAccent)
             .padding(.top, 32)
         }
         .frame(maxWidth: .infinity)

@@ -41,7 +41,9 @@ struct UpdateGoalView: View {
         .alert("Update goal", isPresented: $isShowingAlert) {
             Button("Dismiss", role: .cancel) {}
             Button("Update") {
-                onUpdate(viewModel.trimmedSubject, viewModel.duration)
+                if let goal = viewModel.selection {
+                    onUpdate(goal.subject, goal.duration)
+                }
             }
         } message: {
             Text("If you update now, your streak will start over.")

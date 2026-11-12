@@ -5,6 +5,7 @@ struct ActivityView: View {
     @State private var viewModel: ActivityViewModel
     @State private var isShowingNewGoal = false
     @State private var isShowingUpdateGoal = false
+    @State private var isShowingCalendar = false
     @Environment(\.scenePhase) private var scenePhase
 
     init(goal: LearningGoal, modelContext: ModelContext) {
@@ -55,6 +56,9 @@ struct ActivityView: View {
                 viewModel.startNewGoal(subject: subject, duration: duration)
             }
         }
+        .navigationDestination(isPresented: $isShowingCalendar) {
+            ActivityCalendarView()
+        }
         .navigationDestination(isPresented: $isShowingUpdateGoal) {
             UpdateGoalView(goal: viewModel.goal) { subject, duration in
                 viewModel.startNewGoal(subject: subject, duration: duration)
@@ -88,9 +92,10 @@ struct ActivityView: View {
             Spacer()
 
             HStack(spacing: 12) {
-                // The calendar screen is added in a later branch.
-                headerButton(systemImage: "calendar", label: "Calendar") {}
-                headerButton(systemImage: "target", label: "Learning goal") {
+                headerButton(systemImage: "calendar", label: "Calendar") {
+                    isShowingCalendar = true
+                }
+                headerButton(systemImage: "pencil.and.outline", label: "Learning goal") {
                     isShowingUpdateGoal = true
                 }
             }
@@ -98,14 +103,16 @@ struct ActivityView: View {
     }
 
     private func headerButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            action()
+        } label: {
             Image(systemName: systemImage)
                 .font(.body)
                 .foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background(Color.white.opacity(0.1), in: .circle)
+                .frame(width: 28, height: 28)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
         .accessibilityLabel(label)
     }
 
@@ -133,10 +140,10 @@ struct ActivityView: View {
             Text(viewModel.logButtonTitle)
                 .font(.headline)
                 .foregroundStyle(viewModel.canLogLearned ? .white : .gray)
-                .frame(width: 220, height: 220)
-                .background(viewModel.canLogLearned ? Color.appAccent : Color.white.opacity(0.1), in: .circle)
+                .frame(width: 200, height: 200)
         }
-        .buttonStyle(.plain)
+        .glassActionButton(isLit: viewModel.canLogLearned, tint: .appAccent)
+        .buttonBorderShape(.circle)
         .disabled(!viewModel.canLogLearned)
     }
 
@@ -148,11 +155,11 @@ struct ActivityView: View {
                 Text(viewModel.freezeButtonTitle)
                     .font(.body)
                     .foregroundStyle(viewModel.canFreeze ? .white : .gray)
-                    .frame(maxWidth: 240)
-                    .frame(height: 44)
-                    .background(viewModel.canFreeze ? Color.freezeBlue : Color.white.opacity(0.1), in: .capsule)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
             }
-            .buttonStyle(.plain)
+            .glassActionButton(isLit: viewModel.canFreeze, tint: .freezeBlue)
+            .frame(maxWidth: 240)
             .disabled(!viewModel.canFreeze)
 
             Text(viewModel.freezesUsedText)
