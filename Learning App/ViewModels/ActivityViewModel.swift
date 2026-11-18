@@ -185,10 +185,12 @@ final class ActivityViewModel {
 
     // MARK: - Private
 
+    /// Finds the log saved for the given day, or nil if that day wasn't logged.
     private func log(on date: Date) -> DayLog? {
         goal.logs.first { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
+    /// Saves today as learned or freezed and attaches it to the current goal.
     private func logToday(as kind: DayKind) {
         let newLog = DayLog(date: today, kind: kind, loggedAt: now())
         modelContext.insert(newLog)
