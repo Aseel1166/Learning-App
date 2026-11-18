@@ -25,6 +25,7 @@ final class LearningGoal {
     }
 }
 
+/// Rules
 extension LearningGoal {
     /// Time allowed without logging a day (learned or freezed) before the streak resets.
     static let streakTimeout: TimeInterval = 32 * 60 * 60
